@@ -12,3 +12,5 @@ wheels/
 
 **/input/
 **/results/
+**/working/
+**/catboost_info/
