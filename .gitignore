@@ -16,3 +16,6 @@ wheels/
 profiles
 libraries
 results
+**/results/
+**/working/
+**/catboost_info/
