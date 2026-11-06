@@ -1,9 +1,10 @@
 """Run <trajectory>/run_trajectory.py with every pipeline profiled by Scalene.
 
 Usage (from the project root):
-    uv run python profile_trajectory.py <trajectory> [extra `scalene run` options, e.g. --cpu-only]
+    uv run python profile_trajectory.py <trajectory> --run-index <n> [extra `scalene run` options]
 
-Writes profiles/<trajectory>/<pipeline>.json.
+Writes profiles/<trajectory>/run_<nn>/<pipeline>.json, so repeated runs of the same
+trajectory accumulate instead of overwriting each other.
 """
 
 import os
@@ -12,15 +13,40 @@ import runpy
 import subprocess
 import sys
 
+RUN_INDEX_FLAG = "--run-index"
+
+
+def _split_run_index(argv):
+    """Pull `--run-index <n>` out of argv, leaving the remaining `scalene run` options."""
+    index, rest, position = None, [], 0
+    while position < len(argv):
+        argument = argv[position]
+        if argument == RUN_INDEX_FLAG:
+            if position + 1 >= len(argv):
+                sys.exit(f"{RUN_INDEX_FLAG} requires a value")
+            index = int(argv[position + 1])
+            position += 2
+            continue
+        if argument.startswith(f"{RUN_INDEX_FLAG}="):
+            index = int(argument.split("=", 1)[1])
+            position += 1
+            continue
+        rest.append(argument)
+        position += 1
+    return index, rest
+
+
 if len(sys.argv) < 2:
-    sys.exit(f"usage: {sys.argv[0]} <trajectory> [scalene run options]")
+    sys.exit(f"usage: {sys.argv[0]} <trajectory> {RUN_INDEX_FLAG} <n> [scalene run options]")
 
 ROOT = Path(__file__).resolve().parent
 TRAJECTORY = sys.argv[1]
+RUN_INDEX, SCALENE_OPTIONS = _split_run_index(sys.argv[2:])
+if RUN_INDEX is None or RUN_INDEX < 1:
+    sys.exit(f"{RUN_INDEX_FLAG} <n> is required and must be >= 1")
 TRAJECTORY_DIR = ROOT / TRAJECTORY
 RUNNER = TRAJECTORY_DIR / "run_trajectory.py"
-PROFILE_DIR = ROOT / "profiles" / TRAJECTORY
-SCALENE_OPTIONS = sys.argv[2:]
+PROFILE_DIR = ROOT / "profiles" / TRAJECTORY / f"run_{RUN_INDEX:02d}"
 
 _Popen = subprocess.Popen
 

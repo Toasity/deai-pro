@@ -11,34 +11,7 @@ unzip ~/Downloads/spaceship-titanic.zip -d spaceship_titanic_students/input
 
 Adjust the archive path if needed. The CSV files should sit directly inside `spaceship_titanic_students/input/` (`train.csv`, `test.csv`, and `sample_submission.csv`). Run pipelines from `spaceship_titanic_students/` so they can find `input/`.
 
-To analyze existing profiling data without replaying pipelines:
-
-Open `analyze_bottlenecks.ipynb` with the project's `.venv` Python kernel and run
-all cells from the repository root. Its 11 modules explain the analysis goals,
-data and methods before the code, then display computed results and English
-interpretations written by the assistant after reviewing the tables, code and images.
-Executed tables and 12 charts are included. Input/code changes trigger a stale-review
-notice; rerunning cells does not automatically regenerate the reviewed prose.
-The notebook exports 21 tables and its figures to
-`results/spaceship_titanic_students/bottleneck_analysis/notebook/`, separate from
-the command-line report. No LLM API configuration is required.
-The notebook contains the analysis helpers and does not require importing the
-script or loading previously generated analysis tables.
-
-The command-line version remains available:
-
-```bash
-uv run python analyze_bottlenecks.py spaceship_titanic_students
-```
-
-This requires the existing profiles, traces, category CSV and execution summary. It writes
-`docs/performance_analysis.md` and independent tables/plots under
-`results/spaceship_titanic_students/bottleneck_analysis/`. Predictions are read only as
-artifact clues. See `docs/analysis_plan.md` for scope and interpretation limits.
-
-Run analysis checks with `.venv/bin/python -m unittest discover -s tests -v`.
-
-For descriptive statistics of the recorded profiling evidence, open
+To analyze existing profiling data without replaying pipelines, open
 `descriptive_statistics.ipynb` with the project's `.venv` Python kernel and run all
 cells from the repository root. Module 1 covers the pipeline runtime distribution:
 per-candidate elapsed-time statistics, run-to-run variability, within-run cost
@@ -58,3 +31,12 @@ together with `input_fingerprints.csv` covering the trajectory manifest and ever
 profile file. The English interpretation was reviewed against the executed results;
 a fingerprint stored in the notebook metadata warns when the evidence or the code
 changes and the prose needs re-review. No LLM API configuration is required.
+
+To record new profiling evidence, run one indexed repetition at a time:
+
+```bash
+uv run python profile_trajectory.py spaceship_titanic_students --run-index 11
+```
+
+This writes `profiles/spaceship_titanic_students/run_11/`, so repeated runs of the
+same trajectory accumulate instead of overwriting each other.
