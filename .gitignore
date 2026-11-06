@@ -10,15 +10,22 @@ wheels/
 # Virtual environments
 .venv
 
+# Local editor configuration
+.vscode/
+
+# Local data and generated output
 **/input/
 **/results
 **/results/
 **/baselines
 **/working/
 **/catboost_info/
-
 profiles
 libraries
 results
 
+# Local planning documents, not published
+docs/
+
+# macOS
 .DS_Store
