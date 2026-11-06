@@ -1,4 +1,4 @@
-"""Run <trajectory>/run_trajectory.py with every pipeline profiled by Scalene.
+"""Run run_trajectory.py on <trajectory> with every pipeline profiled by Scalene.
 
 Usage (from the project root):
     uv run python profile_trajectory.py <trajectory> --run-index <n> [extra `scalene run` options]
@@ -45,7 +45,7 @@ RUN_INDEX, SCALENE_OPTIONS = _split_run_index(sys.argv[2:])
 if RUN_INDEX is None or RUN_INDEX < 1:
     sys.exit(f"{RUN_INDEX_FLAG} <n> is required and must be >= 1")
 TRAJECTORY_DIR = ROOT / TRAJECTORY
-RUNNER = TRAJECTORY_DIR / "run_trajectory.py"
+RUNNER = ROOT / "run_trajectory.py"
 PROFILE_DIR = ROOT / "profiles" / TRAJECTORY / f"run_{RUN_INDEX:02d}"
 
 _Popen = subprocess.Popen
@@ -76,12 +76,15 @@ class ScalenePopen(_Popen):
 
 
 def main():
+    if not TRAJECTORY_DIR.is_dir():
+        sys.exit(f"{TRAJECTORY_DIR} not found")
     if not RUNNER.is_file():
         sys.exit(f"{RUNNER} not found")
     PROFILE_DIR.mkdir(parents=True, exist_ok=True)
-    # Pipelines read input/ and the runner writes results/ relative to the working directory.
+    # The runner takes the competition folder as its only argument and runs each
+    # pipeline with that folder as the working directory.
     os.chdir(TRAJECTORY_DIR)
-    sys.argv = [str(RUNNER)]
+    sys.argv = [str(RUNNER), str(TRAJECTORY_DIR)]
     subprocess.Popen = ScalenePopen
     runpy.run_path(str(RUNNER), run_name="__main__")
 

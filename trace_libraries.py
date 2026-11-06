@@ -3,7 +3,7 @@
 Usage (from the project root):
     uv run python trace_libraries.py <trajectory>
 
-Runs <trajectory>/run_trajectory.py with every pipeline executed under a call tracer and
+Runs run_trajectory.py on <trajectory> with every pipeline executed under a call tracer and
 writes libraries/<trajectory>/<pipeline>.json:
 
     {"pipeline": "...", "lines": {"<lineno>": {"<module>": <direct calls>, ...}, ...}}
@@ -73,8 +73,10 @@ def trace_pipeline(pipeline, outfile):
 
 def trace_trajectory(trajectory):
     trajectory_dir = ROOT / trajectory
-    runner = trajectory_dir / "run_trajectory.py"
+    runner = ROOT / "run_trajectory.py"
     output_dir = ROOT / "libraries" / trajectory
+    if not trajectory_dir.is_dir():
+        sys.exit(f"{trajectory_dir} not found")
     if not runner.is_file():
         sys.exit(f"{runner} not found")
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -95,9 +97,10 @@ def trace_trajectory(trajectory):
                 args = [sys.executable, __file__, TRACE_FLAG, args[1], str(outfile)]
             super().__init__(args, *popen_args, **popen_kwargs)
 
-    # Pipelines read input/ and the runner writes results/ relative to the working directory.
+    # The runner takes the competition folder as its only argument and runs each
+    # pipeline with that folder as the working directory.
     os.chdir(trajectory_dir)
-    sys.argv = [str(runner)]
+    sys.argv = [str(runner), str(trajectory_dir)]
     subprocess.Popen = TracingPopen
     runpy.run_path(str(runner), run_name="__main__")
 
