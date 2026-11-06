@@ -72,8 +72,8 @@ def trace_pipeline(pipeline, outfile):
 
 
 def trace_trajectory(trajectory):
-    trajectory_dir = ROOT / trajectory
-    runner = trajectory_dir / "run_trajectory.py"
+    trajectory_dir = (ROOT / trajectory).resolve()
+    runner = ROOT / "run_trajectory.py"
     output_dir = ROOT / "libraries" / trajectory
     if not runner.is_file():
         sys.exit(f"{runner} not found")
@@ -97,7 +97,7 @@ def trace_trajectory(trajectory):
 
     # Pipelines read input/ and the runner writes results/ relative to the working directory.
     os.chdir(trajectory_dir)
-    sys.argv = [str(runner)]
+    sys.argv = [str(runner), str(trajectory_dir)]
     subprocess.Popen = TracingPopen
     runpy.run_path(str(runner), run_name="__main__")
 

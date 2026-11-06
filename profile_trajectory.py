@@ -17,8 +17,8 @@ if len(sys.argv) < 2:
 
 ROOT = Path(__file__).resolve().parent
 TRAJECTORY = sys.argv[1]
-TRAJECTORY_DIR = ROOT / TRAJECTORY
-RUNNER = TRAJECTORY_DIR / "run_trajectory.py"
+TRAJECTORY_DIR = (ROOT / TRAJECTORY).resolve()
+RUNNER = ROOT / "run_trajectory.py"
 PROFILE_DIR = ROOT / "profiles" / TRAJECTORY
 SCALENE_OPTIONS = sys.argv[2:]
 
@@ -55,7 +55,7 @@ def main():
     PROFILE_DIR.mkdir(parents=True, exist_ok=True)
     # Pipelines read input/ and the runner writes results/ relative to the working directory.
     os.chdir(TRAJECTORY_DIR)
-    sys.argv = [str(RUNNER)]
+    sys.argv = [str(RUNNER), str(TRAJECTORY_DIR)]
     subprocess.Popen = ScalenePopen
     runpy.run_path(str(RUNNER), run_name="__main__")
 
