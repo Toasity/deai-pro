@@ -12,12 +12,8 @@ wheels/
 
 **/input/
 **/results
-**/baselines
-
-profiles
-libraries
-results
 **/results/
+**/baselines
 **/working/
 **/catboost_info/
 
