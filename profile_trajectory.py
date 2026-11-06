@@ -41,12 +41,10 @@ if len(sys.argv) < 2:
 
 ROOT = Path(__file__).resolve().parent
 TRAJECTORY = sys.argv[1]
-RUN_INDEX, SCALENE_OPTIONS = _split_run_index(sys.argv[2:])
-if RUN_INDEX is None or RUN_INDEX < 1:
-    sys.exit(f"{RUN_INDEX_FLAG} <n> is required and must be >= 1")
-TRAJECTORY_DIR = ROOT / TRAJECTORY
+TRAJECTORY_DIR = (ROOT / TRAJECTORY).resolve()
 RUNNER = ROOT / "run_trajectory.py"
-PROFILE_DIR = ROOT / "profiles" / TRAJECTORY / f"run_{RUN_INDEX:02d}"
+PROFILE_DIR = ROOT / "profiles" / TRAJECTORY
+SCALENE_OPTIONS = sys.argv[2:]
 
 _Popen = subprocess.Popen
 

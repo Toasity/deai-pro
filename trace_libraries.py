@@ -72,7 +72,7 @@ def trace_pipeline(pipeline, outfile):
 
 
 def trace_trajectory(trajectory):
-    trajectory_dir = ROOT / trajectory
+    trajectory_dir = (ROOT / trajectory).resolve()
     runner = ROOT / "run_trajectory.py"
     output_dir = ROOT / "libraries" / trajectory
     if not trajectory_dir.is_dir():
