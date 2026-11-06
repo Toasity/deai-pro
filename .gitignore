@@ -16,3 +16,4 @@ wheels/
 profiles
 libraries
 results
+.DS_Store

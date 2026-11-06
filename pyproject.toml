@@ -10,6 +10,7 @@ requires-python = ">=3.12"
 dependencies = [
     "catboost>=1.2.10",
     "lightgbm>=4.7.0",
+    "matplotlib>=3.10",
     "pandas>=3.1.0",
     "scalene>=2.4.0",
     "scikit-learn>=1.9.1",
