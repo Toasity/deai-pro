@@ -1,4 +1,4 @@
-"""Run <trajectory>/run_trajectory.py with every pipeline profiled by Scalene.
+"""Run run_trajectory.py <trajectory> with every pipeline profiled by Scalene.
 
 Usage (from the project root):
     uv run python profile_trajectory.py <trajectory> [extra `scalene run` options, e.g. --cpu-only]
@@ -6,7 +6,6 @@ Usage (from the project root):
 Writes profiles/<trajectory>/<pipeline>.json.
 """
 
-import os
 from pathlib import Path
 import runpy
 import subprocess
@@ -18,7 +17,7 @@ if len(sys.argv) < 2:
 ROOT = Path(__file__).resolve().parent
 TRAJECTORY = sys.argv[1]
 TRAJECTORY_DIR = ROOT / TRAJECTORY
-RUNNER = TRAJECTORY_DIR / "run_trajectory.py"
+RUNNER = ROOT / "run_trajectory.py"
 PROFILE_DIR = ROOT / "profiles" / TRAJECTORY
 SCALENE_OPTIONS = sys.argv[2:]
 
@@ -50,12 +49,11 @@ class ScalenePopen(_Popen):
 
 
 def main():
-    if not RUNNER.is_file():
-        sys.exit(f"{RUNNER} not found")
+    if not (TRAJECTORY_DIR / "trajectory.json").is_file():
+        sys.exit(f"{TRAJECTORY_DIR / 'trajectory.json'} not found")
     PROFILE_DIR.mkdir(parents=True, exist_ok=True)
-    # Pipelines read input/ and the runner writes results/ relative to the working directory.
-    os.chdir(TRAJECTORY_DIR)
-    sys.argv = [str(RUNNER)]
+    # The runner launches each pipeline with cwd=<trajectory>, so input/ resolves there.
+    sys.argv = [str(RUNNER), str(TRAJECTORY_DIR)]
     subprocess.Popen = ScalenePopen
     runpy.run_path(str(RUNNER), run_name="__main__")
 
