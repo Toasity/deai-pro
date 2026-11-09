@@ -12,6 +12,7 @@ wheels/
 
 **/input/
 **/results
+**/baselines
 
 profiles
 libraries
