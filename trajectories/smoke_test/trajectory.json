@@ -1,0 +1,51 @@
+{
+  "name": "spaceship_titanic_students",
+  "schema_version": 2,
+  "execution": {
+    "step_order": "ascending; barrier between steps",
+    "within_step": "independent; any order or concurrent",
+    "artifact_dependencies": "none; every script is standalone",
+    "winner_selection": "none; replay all fixed candidates"
+  },
+  "evaluation": {
+    "metric": "pooled out-of-fold accuracy",
+    "maximize": true,
+    "splitter": "StratifiedKFold",
+    "n_splits": 3,
+    "shuffle": true,
+    "random_state": 42,
+    "ranking_ties": "equal scores share rank"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "name": "Linear baselines",
+      "after_steps": [],
+      "within_step_order": "any",
+      "pipelines": [
+        {
+          "file": "pipeline_1_1.py",
+          "artifact_dependencies": []
+        },
+        {
+          "file": "pipeline_1_2.py",
+          "artifact_dependencies": []
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "name": "Domain feature additions",
+      "after_steps": [
+        1
+      ],
+      "within_step_order": "any",
+      "pipelines": [
+        {
+          "file": "pipeline_2_1.py",
+          "artifact_dependencies": []
+        }
+      ]
+    }
+  ]
+}
