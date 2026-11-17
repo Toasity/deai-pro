@@ -15,7 +15,7 @@ import sys
 import matplotlib
 import pandas as pd
 
-from paths import LIBRARIES_DIR, PROFILES_DIR, REPORTS_DIR
+ROOT = Path(__file__).resolve().parent.parent
 
 # Checked in order: a line that calls a model library is "models" even if it also touches pandas,
 # e.g. classifier.fit(X.iloc[rows]). builtins carry no category.
@@ -98,8 +98,7 @@ def compute_total(category, lines, elapsed_time_sec):
 
 def pipeline_rows(profile_path, libraries_path):
     profile = json.loads(profile_path.read_text())
-    libraries = {int(lineno): modules
-                 for lineno, modules in json.loads(libraries_path.read_text())["lines"].items()}
+    libraries = json.loads(libraries_path.read_text())["lines"]
     elapsed = profile["elapsed_time_sec"]
     lines_by_category = defaultdict(list)
     other_lines = []
@@ -108,7 +107,7 @@ def pipeline_rows(profile_path, libraries_path):
             other_lines += file_detail["lines"]
             continue
         for l in file_detail["lines"]:
-            lines_by_category[categorize_line(l["line"], libraries.get(l["lineno"], {}))].append(l)
+            lines_by_category[categorize_line(l["line"], libraries.get(str(l["lineno"]), {}))].append(l)
     lines_by_category[OTHER] = other_lines
     rows = [compute_total(category, lines_by_category[category], elapsed) for category in CATEGORIES]
     for row in rows:
@@ -151,27 +150,35 @@ def plot(totals, outfile):
     return fig
 
 
+def analyze_trajectory(trajectory):
+    """Return per-pipeline category metrics from existing profiles and traces."""
+    profile_dir = ROOT / "profiling/profiles" / trajectory
+    library_dir = ROOT / "profiling/libraries" / trajectory
+    profiles = sorted(profile_dir.glob("pipeline_*.json"))
+    if not profiles:
+        raise FileNotFoundError(f"no profiles in {profile_dir}; run profile_trajectory.py first")
+    missing = [p.stem for p in profiles if not (library_dir / p.name).is_file()]
+    if missing:
+        raise FileNotFoundError(f"no library traces for {missing}; run trace_libraries.py first")
+
+    totals = pd.DataFrame([row for p in profiles for row in pipeline_rows(p, library_dir / p.name)])
+    totals = totals[["pipeline", *[c for c in totals.columns if c != "pipeline"]]]
+    return totals
+
+
 def main():
     args = [arg for arg in sys.argv[1:] if arg != "--show"]
     show = "--show" in sys.argv[1:]
     if len(args) != 1:
         sys.exit(f"usage: {sys.argv[0]} <trajectory> [--show]")
     trajectory = Path(args[0]).name  # accept a name or a trajectory path
-    profile_dir = PROFILES_DIR / trajectory
-    libraries_dir = LIBRARIES_DIR / trajectory
-    output_dir = REPORTS_DIR / trajectory
-
-    profiles = sorted(profile_dir.glob("pipeline_*.json"))
-    if not profiles:
-        sys.exit(f"no profiles in {profile_dir}; run profile_trajectory.py first")
-    missing = [p.stem for p in profiles if not (libraries_dir / p.name).is_file()]
-    if missing:
-        sys.exit(f"no library traces for {missing}; run trace_libraries.py first")
-
     if not show:
         matplotlib.use("Agg")
-    totals = pd.DataFrame([row for p in profiles for row in pipeline_rows(p, libraries_dir / p.name)])
-    totals = totals[["pipeline", *[c for c in totals.columns if c != "pipeline"]]]
+    try:
+        totals = analyze_trajectory(trajectory)
+    except FileNotFoundError as exc:
+        sys.exit(str(exc))
+    output_dir = ROOT / "profiling/results" / trajectory
     output_dir.mkdir(parents=True, exist_ok=True)
     totals.to_csv(output_dir / "categories.csv", index=False)
     plot(totals, output_dir / "categories.png")

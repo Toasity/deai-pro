@@ -21,7 +21,7 @@ import runpy
 import subprocess
 import sys
 
-from paths import LIBRARIES_DIR, trajectory_dir
+ROOT = Path(__file__).resolve().parent.parent
 
 TRACE_FLAG = "--pipeline"
 
@@ -72,9 +72,12 @@ def trace_pipeline(pipeline, outfile):
 
 
 def trace_trajectory(trajectory):
-    folder = trajectory_dir(trajectory)
+    candidate = ROOT / "trajectories" / trajectory
+    folder = (candidate if (candidate / "trajectory.json").is_file() else Path(trajectory)).resolve()
+    if not (folder / "trajectory.json").is_file():
+        sys.exit(f"no trajectory.json for {trajectory!r} (looked in {candidate} and {folder})")
     runner = Path(__file__).resolve().parent / "run_trajectory.py"
-    output_dir = LIBRARIES_DIR / folder.name
+    output_dir = ROOT / "profiling/libraries" / folder.name
     output_dir.mkdir(parents=True, exist_ok=True)
 
     original_popen = subprocess.Popen

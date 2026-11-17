@@ -12,13 +12,16 @@ import subprocess
 import sys
 from time import perf_counter
 
-from paths import trajectory_dir
+ROOT = Path(__file__).resolve().parent.parent
 
 
 def main():
     if len(sys.argv) != 2:
         sys.exit(f"usage: python {Path(__file__).name} <trajectory>")
-    folder = trajectory_dir(sys.argv[1])
+    candidate = ROOT / "trajectories" / sys.argv[1]
+    folder = (candidate if (candidate / "trajectory.json").is_file() else Path(sys.argv[1])).resolve()
+    if not (folder / "trajectory.json").is_file():
+        sys.exit(f"no trajectory.json for {sys.argv[1]!r} (looked in {candidate} and {folder})")
     manifest = json.loads((folder / "trajectory.json").read_text())
     maximize = manifest["evaluation"]["maximize"]
     results = []

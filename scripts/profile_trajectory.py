@@ -11,14 +11,17 @@ import runpy
 import subprocess
 import sys
 
-from paths import PROFILES_DIR, trajectory_dir
+ROOT = Path(__file__).resolve().parent.parent
 
 if len(sys.argv) < 2:
     sys.exit(f"usage: {sys.argv[0]} <trajectory> [scalene run options]")
 
-TRAJECTORY_DIR = trajectory_dir(sys.argv[1])
+candidate = ROOT / "trajectories" / sys.argv[1]
+TRAJECTORY_DIR = (candidate if (candidate / "trajectory.json").is_file() else Path(sys.argv[1])).resolve()
+if not (TRAJECTORY_DIR / "trajectory.json").is_file():
+    sys.exit(f"no trajectory.json for {sys.argv[1]!r} (looked in {candidate} and {TRAJECTORY_DIR})")
 RUNNER = Path(__file__).resolve().parent / "run_trajectory.py"
-PROFILE_DIR = PROFILES_DIR / TRAJECTORY_DIR.name
+PROFILE_DIR = ROOT / "profiling/profiles" / TRAJECTORY_DIR.name
 SCALENE_OPTIONS = sys.argv[2:]
 
 _Popen = subprocess.Popen
