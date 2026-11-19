@@ -1,19 +1,27 @@
 # DEAI pro
 
-Each `*_students/` folder holds one fixed trajectory of ML pipelines. `pipeline_X_y.py` is
+Each `trajectories/<trajectory>/` folder holds one fixed trajectory of ML pipelines. `pipeline_X_y.py` is
 variant `y` of step `X`. The variants of a step are independent of each other, and
 `trajectory.json` lists the steps and the pipelines in each one.
 
 Run a whole trajectory from the repository root:
 
 ```bash
-python run_trajectory.py spaceship_titanic_students
-python run_trajectory.py house_price_students
+uv run scripts/run_trajectory.py spaceship_titanic_students
+uv run scripts/run_trajectory.py house_price_students
 ```
 
-The runner runs each pipeline inside its competition folder, so the pipelines can find `input/`.
-It writes the ranking to `<folder>/results/summary.json`. To run a single pipeline, run it
-from its folder (e.g. `cd house_price_students && python pipeline_1_1.py`).
+The runner runs each pipeline inside its trajectory folder (`trajectories/<trajectory>/`), so the
+pipelines can find `input/` there. It writes the ranking to `<folder>/results/summary.json`. To run
+a single pipeline, run it from its folder (e.g. `cd trajectories/house_price_students && python pipeline_1_1.py`).
+
+Data lives in `trajectories/<trajectory>/input/`. If you already have the CSVs in a legacy
+top-level folder (e.g. `house_price_students/input/`), link them instead of copying the multi-GB
+files:
+
+```bash
+ln -s ../../house_price_students/input trajectories/house_price_students/input
+```
 
 ## Spaceship Titanic
 
@@ -22,11 +30,11 @@ Download the data from the [Kaggle competition data page](https://www.kaggle.com
 From the repository root, unzip the downloaded archive into the competition's `input/` folder:
 
 ```bash
-mkdir -p spaceship_titanic_students/input
-unzip ~/Downloads/spaceship-titanic.zip -d spaceship_titanic_students/input
+mkdir -p trajectories/spaceship_titanic_students/input
+unzip ~/Downloads/spaceship-titanic.zip -d trajectories/spaceship_titanic_students/input
 ```
 
-Adjust the archive path if needed. The CSV files should sit directly inside `spaceship_titanic_students/input/` (`train.csv`, `test.csv`, and `sample_submission.csv`).
+Adjust the archive path if needed. The CSV files should sit directly inside `trajectories/spaceship_titanic_students/input/` (`train.csv`, `test.csv`, and `sample_submission.csv`).
 
 ## UK house prices
 
@@ -39,12 +47,12 @@ and unzip it into the competition's `input/` folder:
 ```bash
 curl -L -o uk-housing-prices-paid.zip \
   https://www.kaggle.com/api/v1/datasets/download/hm-land-registry/uk-housing-prices-paid
-mkdir -p house_price_students/input
-unzip uk-housing-prices-paid.zip -d house_price_students/input
+mkdir -p trajectories/house_price_students/input
+unzip uk-housing-prices-paid.zip -d trajectories/house_price_students/input
 rm uk-housing-prices-paid.zip
 ```
 
-The file should then sit at `house_price_students/input/price_paid_records.csv`. Use this
+The file should then sit at `trajectories/house_price_students/input/price_paid_records.csv`. Use this
 Kaggle file, not the gov.uk `pp-complete.csv`: that one has no header row and different columns.
 
 Each pipeline reads the whole file, takes a seeded random sample of 2,000,000 rows (the

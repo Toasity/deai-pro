@@ -59,6 +59,32 @@ The categories are checked top to bottom, so `classifier.fit(X.iloc[rows])` coun
 Lines without any library call count as data handling, except `import` lines, which count as
 setup. To change the mapping, edit `CATEGORY_PREFIXES` in `report_categories.py`.
 
+## Top hotspots
+
+`scripts/report_hotspot.py` ranks the most expensive source statements instead of categories:
+
+```bash
+uv run python scripts/report_hotspot.py                                  # both trajectories
+uv run python scripts/report_hotspot.py house_price_students --top 5     # one trajectory, top 5
+```
+
+It reads the same profiles and traces, attributes every profiled line to its statement, and sums
+the estimated seconds per statement across the trajectory's pipelines. Writes
+`results/<trajectory>/hotspots.csv` (full ranking), `results/<trajectory>/hotspots_details.csv`
+(every pipeline/source location behind the top N) and `results/hotspots.png` (one panel per
+trajectory). Add `--show` to also open the saved plot in a window. `--top N` requires
+a positive integer.
+
+The same functions are importable, so `explore.ipynb` reuses them rather than redefining the
+analysis: `analyze_trajectory`, `analyze_all`, `report_trajectory`, `top10_details`,
+`operation_label`, `plot_hotspots`.
+
+Import reports as `from scripts.report_hotspot import analyze_all` or
+`from scripts.report_categories import pipeline_rows` from the project root.
+Each report resolves project paths and reads profiles directly.
+Direct script execution remains supported; module execution also works, for example
+`uv run python -m scripts.report_hotspot --top 5`.
+
 ## Metrics in the CSV
 
 Scalene only stores CPU time as percentages of the run. The report converts them to seconds with

@@ -15,7 +15,10 @@ from contextlib import redirect_stdout
 from pathlib import Path
 from time import perf_counter
 
-from paths import trajectory_dir
+ROOT = Path(__file__).resolve().parent.parent
+
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from optimizer.optimizer import CodeOptimizer
 
@@ -28,17 +31,24 @@ def run_in_session(folder, name):
     # Idea: maybe we can later keep some stuff in global namespace to re-use but only very select things?
     output = io.StringIO()
     print(code)
-    with redirect_stdout(
-        output
-    ):  # needed so we can read line by line, alternatively we have code_optimizer make it so that `score` is a global var or return to read out
-        exec(compile(code, str(path), "exec"), namespace, namespace)
+    original_path = sys.path.copy()
+    # Match direct script execution: imports can resolve beside the pipeline.
+    sys.path.insert(0, str(path.resolve().parent))
+    try:
+        with redirect_stdout(output):
+            exec(compile(code, str(path), "exec"), namespace, namespace)
+    finally:
+        sys.path[:] = original_path
     return output.getvalue().splitlines(keepends=True)
 
 
 def main():
     if len(sys.argv) != 2:
         sys.exit(f"usage: python {Path(__file__).name} <trajectory>")
-    folder = trajectory_dir(sys.argv[1])
+    candidate = ROOT / "trajectories" / sys.argv[1]
+    folder = (candidate if (candidate / "trajectory.json").is_file() else Path(sys.argv[1])).resolve()
+    if not (folder / "trajectory.json").is_file():
+        sys.exit(f"no trajectory.json for {sys.argv[1]!r} (looked in {candidate} and {folder})")
     # Pipelines read ./input/ relative to their competition folder.
     os.chdir(folder)  # move to trajectory folder
     manifest = json.loads((folder / "trajectory.json").read_text())
